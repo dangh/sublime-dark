@@ -18,10 +18,12 @@ def get_color(mode):
     return get_system_color() if mode == "system" else mode
 
 
-def repaint(color):
-    settings = sublime.load_settings("Preferences.sublime-settings")
+def repaint(mode, settings):
     prefs = dict(dark=dict(), light=dict(), user=dict())
-    updated = False
+    changes = dict()
+    if settings.get("dark_mode", "system") != mode:
+        changes["dark_mode"] = mode
+    color = get_color(mode)
     for key, value in settings.to_dict().items():
         for mode_ in ["dark", "light"]:
             suffix = ".{}".format(mode_)
@@ -29,16 +31,17 @@ def repaint(color):
                 user_key = key[0 : -len(suffix)]
                 prefs[mode_][user_key] = value
                 prefs["user"][user_key] = settings.get(user_key)
-    inverse_mode = "dark" if color == "light" else "light"
+                break
+    inverse_color = "dark" if color == "light" else "light"
     for key, value in prefs["user"].items():
         if key in prefs[color]:
             if prefs[color][key] != value:
-                settings.set(key, prefs[color][key])
-                updated = True
-        elif key in prefs[inverse_mode]:
-            settings.erase(key)
-            updated = True
-    if updated:
+                changes[key] = prefs[color][key]
+        elif key in prefs[inverse_color]:
+            if None != value:
+                changes[key] = None
+    if changes:
+        settings.update(changes)
         sublime.save_settings("Preferences.sublime-settings")
 
 
@@ -46,13 +49,11 @@ class EventListener(sublime_plugin.EventListener):
     def on_activated_async(self, view):
         settings = sublime.load_settings("Preferences.sublime-settings")
         if settings.get("dark_mode", "system") == "system":
-            repaint(get_system_color())
+            repaint("system", settings)
 
 
 class ToggleDarkModeCommand(sublime_plugin.ApplicationCommand):
     def run(self, mode):
         settings = sublime.load_settings("Preferences.sublime-settings")
         if settings.get("dark_mode", "system") != mode:
-            settings.set("dark_mode", mode)
-            sublime.save_settings("Preferences.sublime-settings")
-            repaint(get_color(mode))
+            repaint(mode, settings)
