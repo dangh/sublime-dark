@@ -1,0 +1,5 @@
+[
+  { "caption": "Style: Dark", "command": "toggle_style", "args": { "mode": "dark" } },
+  { "caption": "Style: Light", "command": "toggle_style", "args": { "mode": "light" } },
+  { "caption": "Style: System", "command": "toggle_style", "args": { "mode": "system" } },
+]

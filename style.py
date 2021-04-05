@@ -9,8 +9,8 @@ def get_color(mode):
 def repaint(mode, settings):
     prefs = dict(dark=dict(), light=dict(), user=dict())
     changes = dict()
-    if settings.get("dark_mode", "system") != mode:
-        changes["dark_mode"] = mode
+    if settings.get("style", "system") != mode:
+        changes["style"] = mode
     color = get_color(mode)
     for key, value in settings.to_dict().items():
         for mode_ in ["dark", "light"]:
@@ -36,12 +36,12 @@ def repaint(mode, settings):
 class EventListener(sublime_plugin.EventListener):
     def on_activated_async(self, view):
         settings = sublime.load_settings("Preferences.sublime-settings")
-        if settings.get("dark_mode", "system") == "system":
+        if settings.get("style", "system") == "system":
             repaint("system", settings)
 
 
-class ToggleDarkModeCommand(sublime_plugin.ApplicationCommand):
+class ToggleStyleCommand(sublime_plugin.ApplicationCommand):
     def run(self, mode):
         settings = sublime.load_settings("Preferences.sublime-settings")
-        if settings.get("dark_mode", "system") != mode:
+        if settings.get("style", "system") != mode:
             repaint(mode, settings)
