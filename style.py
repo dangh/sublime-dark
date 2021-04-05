@@ -1,9 +1,35 @@
 import sublime
 import sublime_plugin
-
+from threading import Event, Thread
 
 _defaults = None
 _applying = False
+
+
+class SystemStyle:
+    funcs = list()
+    timer = None
+
+    @staticmethod
+    def add_on_change(fn):
+        SystemStyle.funcs.append(fn)
+
+        if not SystemStyle.timer:
+            SystemStyle.timer = Event()
+
+            def loop():
+                while not SystemStyle.timer.wait(0.5):
+                    for fn in SystemStyle.funcs:
+                        fn()
+
+            Thread(target=loop).start()
+
+    @staticmethod
+    def clear_on_change():
+        if SystemStyle.timer:
+            SystemStyle.timer.set()
+
+        SystemStyle.funcs.clear()
 
 
 def settings():
@@ -72,8 +98,19 @@ class ToggleStyleCommand(sublime_plugin.ApplicationCommand):
 
 
 def plugin_loaded():
-    settings().add_on_change("sublime-style", lambda: apply(settings().get("style", "auto")))
+    def on_settings_change():
+        style = settings().get("style", "auto")
+
+        apply(style)
+
+        if style == "auto":
+            SystemStyle.add_on_change(lambda: apply("auto"))
+        else:
+            SystemStyle.clear_on_change()
+
+    settings().add_on_change("sublime-style", on_settings_change)
 
 
 def plugin_unloaded():
     settings().clear_on_change("sublime-style")
+    SystemStyle.clear_on_change()
