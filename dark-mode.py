@@ -1,21 +1,9 @@
 import sublime
 import sublime_plugin
-import re
-import subprocess
-
-
-def get_system_color():
-    try:
-        status = subprocess.check_output(
-            "defaults read -g AppleInterfaceStyle".split()
-        ).decode()
-        return "dark" if re.search(r"dark", status, flags=re.I) else "light"
-    except:
-        return "light"
 
 
 def get_color(mode):
-    return get_system_color() if mode == "system" else mode
+    return sublime.ui_info()["system"]["style"] if mode == "system" else mode
 
 
 def repaint(mode, settings):
