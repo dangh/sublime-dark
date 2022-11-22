@@ -51,8 +51,14 @@ def changeset(style):
     for key, value in settings().to_dict().items():
         for mode in ["dark", "light"]:
             prefix = mode + "_"
+            suffix = "_" + mode
             if key.startswith(prefix):
                 key = key[len(prefix) :]
+                style_settings[mode][key] = value
+                style_settings["current"][key] = settings().get(key)
+                break
+            elif key.endswith(suffix):
+                key = key[: -len(suffix)]
                 style_settings[mode][key] = value
                 style_settings["current"][key] = settings().get(key)
                 break
